@@ -11,10 +11,13 @@ import java.util.Scanner;
 public class Player {
 
     private final Path pathname;
-    private Integer score = 0, maxPossibleGuess, minPossibleGuess;
+
+    private String name;
+    private Integer score = 0, lastScore = 0, maxPossibleGuess, minPossibleGuess;
 
     public Player(String name) throws FileNotFoundException {
         this.pathname = Paths.get("./" + name + "-score.txt");
+        this.name = name;
         this.load();
     }
 
@@ -23,8 +26,10 @@ public class Player {
         if (saveData.trim().isEmpty()) return;
 
         try {
+            this.lastScore = Integer.parseInt(saveData);
             this.score = Integer.parseInt(saveData);
         } catch (NumberFormatException e) {
+            this.lastScore = 0;
             this.score = 0;
         }
     }
@@ -70,8 +75,16 @@ public class Player {
         return file;
     }
 
+    public String getName() {
+        return this.name;
+    }
+
     public Integer getScore() {
         return this.score;
+    }
+
+    public Integer getLastScore() {
+        return this.lastScore;
     }
 
     public void resetScore() {

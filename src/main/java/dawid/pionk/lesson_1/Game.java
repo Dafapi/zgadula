@@ -1,6 +1,7 @@
 package dawid.pionk.lesson_1;
 
 import java.io.FileNotFoundException;
+import java.util.List;
 import java.util.Scanner;
 
 public class Game {
@@ -8,8 +9,8 @@ public class Game {
     private static final int PLAYER_GUESS_MODE = 0;
     private static final int COMPUTER_GUESS_MODE = 1;
     private static final int COMPETE_GUESS_MODE = 1;
-    Integer target, maxTarget, lastPlayerScore, selectedMode;
-    Player player;
+    Integer target, maxTarget, selectedMode;
+    List<Player> players;
 
     public Game() {
         this.maxTarget = 100;
@@ -27,15 +28,14 @@ public class Game {
 
         Integer playerGuess, checkResult = CheckGuessService.GUESS_TOO_LOW;
         while (!checkResult.equals(CheckGuessService.GUESS_CORRECT)) {
-            playerGuess = this.inputGuessToTry();
-            checkResult = this.checkGuess(playerGuess);
-            this.reactToCheckResult(checkResult, playerGuess);
+            for (Player player : this.players) {
+                playerGuess = this.inputGuessToTry(player);
+                checkResult = this.checkGuess(playerGuess);
+                this.reactToCheckResult(checkResult, playerGuess, player);
+            }
         }
 
-        System.out.println("Number of guesses: " + this.player.getScore());
-        if (this.lastPlayerScore > this.player.getScore() || this.lastPlayerScore.equals(0)) {
-            player.save();
-        }
+        this.showResultsAndSave();
     }
 
     private void choseGameMode() {
@@ -70,24 +70,27 @@ public class Game {
         } else {
             this.prepareComputer();
         }
-
-        this.player.adjustMinPossibleGuess(0);
-        this.player.adjustMaxPossibleGuess(this.maxTarget);
     }
 
-    private void preparePlayer() throws FileNotFoundException {
+    private void preparePlayer() throws Exception {
         Scanner scan = new Scanner(System.in);
         System.out.print("What is your name: ");
         String name = scan.nextLine();
         System.out.println("\nPreparing player");
-        this.player = new Player(name);
-        System.out.println("Best score: " + this.player.getScore());
-        this.lastPlayerScore = this.player.getScore();
-        this.player.resetScore();
+        Player player = new Player(name);
+        System.out.println("Best score: " + player.getScore());
+        player.resetScore();
+        player.adjustMinPossibleGuess(0);
+        player.adjustMaxPossibleGuess(this.maxTarget);
+        this.players.add(player);
     }
 
-    private void prepareComputer() throws FileNotFoundException {
-        this.player = new Player("");
+    private void prepareComputer() throws Exception {
+        Player player = new Player("");
+        player.adjustMinPossibleGuess(0);
+        player.adjustMaxPossibleGuess(this.maxTarget);
+        this.players.add(player);
+
     }
 
     private void prepareTarget() {
@@ -98,11 +101,11 @@ public class Game {
         }
     }
 
-    private Integer inputGuessToTry() throws Exception {
+    private Integer inputGuessToTry(Player player) throws Exception {
         if (this.selectedMode.equals(PLAYER_GUESS_MODE)) {
             return InputGuessService.inputPlayerGuess(this.maxTarget);
         } else {
-            return InputGuessService.inputComputerGuess(this.player.getMaxPossibleGuess(), this.player.getMinPossibleGuess());
+            return InputGuessService.inputComputerGuess(player.getMaxPossibleGuess(), player.getMinPossibleGuess());
         }
     }
 
@@ -114,19 +117,28 @@ public class Game {
         }
     }
 
-    private void reactToCheckResult(Integer checkResult, Integer playerGuess) throws Exception {
+    private void reactToCheckResult(Integer checkResult, Integer playerGuess, Player player) throws Exception {
         if (!checkResult.equals(CheckGuessService.GUESS_CORRECT)) {
-            this.player.addScorePoint();
+            player.addScorePoint();
         }
 
         if (this.selectedMode.equals(COMPUTER_GUESS_MODE)) {
             switch (checkResult) {
                 case CheckGuessService.GUESS_TOO_LOW:
-                    this.player.adjustMinPossibleGuess(playerGuess + 1);
+                    player.adjustMinPossibleGuess(playerGuess + 1);
                     break;
                 case CheckGuessService.GUESS_TOO_HIGH:
-                    this.player.adjustMaxPossibleGuess(playerGuess - 1);
+                    player.adjustMaxPossibleGuess(playerGuess - 1);
                     break;
+            }
+        }
+    }
+
+    private void showResultsAndSave() throws FileNotFoundException {
+        for (Player player : this.players) {
+            System.out.println("Player " + player.getName() + " of guesses: " + player.getScore());
+            if (player.getLastScore() > player.getScore() || player.getLastScore().equals(0)) {
+                player.save();
             }
         }
     }
