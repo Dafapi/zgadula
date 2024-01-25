@@ -4,12 +4,12 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class InputGuessService {
-    public static Integer inputPlayerGuess(Integer maxTarget) {
+    public static Integer inputPlayerGuess(String playerName, Integer minTarget, Integer maxTarget) {
         Integer guess = null;
         Scanner scan = new Scanner(System.in);
 
         while (guess == null) {
-            System.out.print("What is your guess (0-" + maxTarget + "): ");
+            System.out.print("[" + playerName + "] What is your guess (" + minTarget + " - " + maxTarget + "): ");
             try {
                 guess = Integer.parseInt(scan.nextLine());
             } catch (NumberFormatException e) {
@@ -27,6 +27,9 @@ public class InputGuessService {
             return minGuess;
         }
 
-        return minGuess + (new Random()).nextInt(maxGuess - minGuess);
+        Integer guess = minGuess + (new Random()).nextInt(maxGuess - minGuess);
+        System.out.println("Computer guess: " + guess);
+
+        return guess;
     }
 }

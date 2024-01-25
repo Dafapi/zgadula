@@ -13,25 +13,44 @@ public class Player {
     private final Path pathname;
 
     private String name;
-    private Integer score = 0, lastScore = 0, maxPossibleGuess, minPossibleGuess;
+    private Integer score = 0, lastBestScore = 0, losesNo = 0, maxPossibleGuess, minPossibleGuess;
+    private String badge = "";
 
-    public Player(String name) throws FileNotFoundException {
-        this.pathname = Paths.get("./" + name + "-score.txt");
+    public Player(String name, String gameMetadata) {
+        this.pathname = Paths.get("./score---" + name + "---" + gameMetadata + ".txt");
         this.name = name;
         this.load();
     }
 
     private void load() {
-        String saveData = this.getSaveData();
-        if (saveData.trim().isEmpty()) return;
+        String saveData = this.getSaveData().trim();
+        if (saveData.isEmpty()) return;
 
         try {
-            this.lastScore = Integer.parseInt(saveData);
-            this.score = Integer.parseInt(saveData);
+            try {
+                this.lastBestScore = Integer.parseInt(saveData.split(";")[0]);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                this.lastBestScore = 0;
+            }
+
+            try {
+                this.losesNo = Integer.parseInt(saveData.split(";")[1]);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                this.losesNo = 0;
+            }
+
+            try {
+                this.badge = saveData.split(";")[2];
+            } catch (ArrayIndexOutOfBoundsException e) {
+                this.badge = "";
+            }
         } catch (NumberFormatException e) {
-            this.lastScore = 0;
-            this.score = 0;
+            this.lastBestScore = 0;
+            this.losesNo = 0;
+            this.badge = "";
         }
+
+        this.score = 0;
     }
 
     private String getSaveData() {
@@ -41,7 +60,6 @@ public class Player {
         try {
             filereader = new Scanner(file);
             data = filereader.nextLine();
-
         } catch (FileNotFoundException | NoSuchElementException e) {
             return "";
         }
@@ -53,7 +71,16 @@ public class Player {
     public void save() throws FileNotFoundException {
         File file = this.prepareFile(this.pathname);
         PrintWriter filewriter = new PrintWriter(file);
-        String writeln = this.score.toString();
+
+        Integer scoreToSave;
+        if (this.getLastBestScore() > this.getScore() || this.getLastBestScore().equals(0)) {
+            scoreToSave = this.getScore();
+        } else {
+            scoreToSave = this.getLastBestScore();
+        }
+
+        String writeln = scoreToSave.toString() + ";" + this.getLosesNo() + ";" + this.badge;
+
         filewriter.println(writeln);
         filewriter.close();
     }
@@ -76,19 +103,19 @@ public class Player {
     }
 
     public String getName() {
-        return this.name;
+        return (this.badge.isEmpty() ? "" : "<<" + this.badge + ">> ") + this.name;
     }
 
     public Integer getScore() {
         return this.score;
     }
 
-    public Integer getLastScore() {
-        return this.lastScore;
+    public Integer getLastBestScore() {
+        return this.lastBestScore;
     }
 
-    public void resetScore() {
-        this.score = 0;
+    public Integer getLosesNo() {
+        return this.losesNo;
     }
 
     public void addScorePoint() {
@@ -115,5 +142,20 @@ public class Player {
 
     public Integer getMinPossibleGuess() {
         return this.minPossibleGuess;
+    }
+
+    public void increaseLoseStreak() {
+        this.losesNo++;
+    }
+
+    public void addBadge(String badge) throws Exception {
+        if (badge.contains(";")) {
+            throw new Exception("Invalid badge name");
+        }
+        this.badge = badge;
+    }
+
+    public void removeBadge() {
+        this.badge = "";
     }
 }

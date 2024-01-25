@@ -13,11 +13,9 @@ public class CheckGuessService {
         return CheckGuessService.checkGuess(playerGuess, expectedTarget);
     }
 
-    public static int letPlayerDecide(Integer playerGuess) {
+    public static int letPlayerDecide() {
         Scanner scan = new Scanner(System.in);
         while (true) {
-            System.out.println("Player guess: " + playerGuess);
-
             System.out.print("Is it good? (too [l]ow / too [h]igh / [c]orrect): ");
             String isGuessCorrect = scan.nextLine();
 
